@@ -57,7 +57,7 @@ http://localhost:8501
 Use the deployed version here:
 
 ```text
-https://instagramunfolloweranalyzer-e82ph7wzp8fa5nl32becva.streamlit.app/
+https://instagramunfolloweranalyzer-e82ph7wzp8fa5nl32becva.streamlit.app/people-who-dont-follow-you-back
 ```
 
 Replace this with your final live URL if you deploy it somewhere else.
