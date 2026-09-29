@@ -34,27 +34,30 @@ if followers_file is not None and following_file is not None:
         followers_data = json.load(followers_file)
         following_data = json.load(following_file)
 
-        # NORMALIZE SCHEMA DRIFT
-        # Handle Instagram's two different formats for following data
-        if isinstance(following_data, dict):
-            following_raw_list = following_data.get('relationships_following', [])
-        elif isinstance(following_data, list):
-            following_raw_list = following_data
-        else:
-            following_raw_list = []
+        # ---------------------------------------------------------
+        # BULLETPROOF RECURSIVE EXTRACTION
+        # This function searches the entire JSON file no matter what keys Instagram uses
+        # ---------------------------------------------------------
+        def extract_usernames(data):
+            users = set()
+            if isinstance(data, dict):
+                # If we find the specific data node, extract the username
+                if 'string_list_data' in data and len(data['string_list_data']) > 0:
+                    val = data['string_list_data'][0].get('value')
+                    if val:
+                        users.add(val)
+                # Keep searching deeper into the dictionary
+                for value in data.values():
+                    users.update(extract_usernames(value))
+            elif isinstance(data, list):
+                # Search through every item in a list
+                for item in data:
+                    users.update(extract_usernames(item))
+            return users
 
-        # EXTRACT SETS SAFELY
-        followers = {
-            user['string_list_data'][0]['value'] 
-            for user in followers_data 
-            if 'string_list_data' in user and len(user['string_list_data']) > 0 and 'value' in user['string_list_data'][0]
-        }
-        
-        following = {
-            user['string_list_data'][0]['value'] 
-            for user in following_raw_list
-            if 'string_list_data' in user and len(user['string_list_data']) > 0 and 'value' in user['string_list_data'][0]
-        }
+        # Extract sets safely without relying on root key names
+        followers = extract_usernames(followers_data)
+        following = extract_usernames(following_data)
 
         # calculate difference
         unfollowers = sorted(list(following - followers))
