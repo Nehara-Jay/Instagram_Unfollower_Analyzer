@@ -34,32 +34,27 @@ if followers_file is not None and following_file is not None:
         followers_data = json.load(followers_file)
         following_data = json.load(following_file)
 
-        # --- ADD THIS DEBUG BLOCK ---
-        st.error("Raw Following Data Preview:")
-        if isinstance(following_data, dict):
-            st.write("Dictionary Keys:", list(following_data.keys()))
-            for key in following_data.keys():
-                if isinstance(following_data[key], list) and len(following_data[key]) > 0:
-                    st.write(f"First record inside '{key}':", following_data[key][0])
-                    break
-        elif isinstance(following_data, list) and len(following_data) > 0:
-            st.write("First record in List:", following_data[0])
-        
-        st.stop() 
-        # ----------------------------
-
         # ---------------------------------------------------------
         # BULLETPROOF RECURSIVE EXTRACTION
-        # This function searches the entire JSON file no matter what keys Instagram uses
         # ---------------------------------------------------------
         def extract_usernames(data):
             users = set()
             if isinstance(data, dict):
-                # If we find the specific data node, extract the username
+                # Check if this node looks like a user record
                 if 'string_list_data' in data and len(data['string_list_data']) > 0:
-                    val = data['string_list_data'][0].get('value')
-                    if val:
+                    list_item = data['string_list_data'][0]
+                    
+                    # 1. Try classic format: get username from 'value'
+                    val = list_item.get('value')
+                    
+                    # 2. Try new format: if 'value' is missing, get it from 'title'
+                    if not val:
+                        val = data.get('title')
+                        
+                    # 3. Add to set if we found a valid username
+                    if val and isinstance(val, str):
                         users.add(val)
+                        
                 # Keep searching deeper into the dictionary
                 for value in data.values():
                     users.update(extract_usernames(value))
@@ -69,7 +64,7 @@ if followers_file is not None and following_file is not None:
                     users.update(extract_usernames(item))
             return users
 
-        # Extract sets safely without relying on root key names
+        # Extract sets safely handling both schema formats
         followers = extract_usernames(followers_data)
         following = extract_usernames(following_data)
 
@@ -87,7 +82,7 @@ if followers_file is not None and following_file is not None:
         metric2.metric("Mutuals", len(mutuals))
         metric3.metric("People who follow you", len(fans))
 
-        st.subheader("people who don't follow you back:")
+        st.subheader("People who don't follow you back:")
 
         if unfollowers:
             # display as a table
