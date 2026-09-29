@@ -49,7 +49,7 @@ streamlit run app.py
 Then open the local URL shown in the terminal, usually:
 
 ```text
-http://localhost:8501
+[text](https://instagramunfolloweranalyzer-e82ph7wzp8fa5nl32becva.streamlit.app/)
 ```
 
 ## Instagram JSON files to upload
