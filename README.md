@@ -20,6 +20,7 @@ Instagram folower unfollower/
 ├── app.py
 ├── logic.py
 ├── README.md
+├── requirements.txt
 └── instagram-_yourname.../
     └── connections/
         └── followers_and_following/
