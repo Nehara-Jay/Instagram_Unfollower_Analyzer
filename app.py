@@ -34,6 +34,20 @@ if followers_file is not None and following_file is not None:
         followers_data = json.load(followers_file)
         following_data = json.load(following_file)
 
+        # --- ADD THIS DEBUG BLOCK ---
+        st.error("Raw Following Data Preview:")
+        if isinstance(following_data, dict):
+            st.write("Dictionary Keys:", list(following_data.keys()))
+            for key in following_data.keys():
+                if isinstance(following_data[key], list) and len(following_data[key]) > 0:
+                    st.write(f"First record inside '{key}':", following_data[key][0])
+                    break
+        elif isinstance(following_data, list) and len(following_data) > 0:
+            st.write("First record in List:", following_data[0])
+        
+        st.stop() 
+        # ----------------------------
+
         # ---------------------------------------------------------
         # BULLETPROOF RECURSIVE EXTRACTION
         # This function searches the entire JSON file no matter what keys Instagram uses
@@ -105,4 +119,3 @@ if followers_file is not None and following_file is not None:
 
     except Exception as e:
         st.error(f"Error processing files. Make sure you uploaded the correct JSON files. Error detail: {e}")
-    
