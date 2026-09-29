@@ -34,25 +34,25 @@ if followers_file is not None and following_file is not None:
         followers_data = json.load(followers_file)
         following_data = json.load(following_file)
 
-        # --- DEBUGGING LINES ---
-        st.info(f"Raw follower records in file: {len(followers_data)}")
-        if isinstance(following_data, dict) and 'relationships_following' in following_data:
-            st.info(f"Raw following records in file: {len(following_data['relationships_following'])}")
+        # NORMALIZE SCHEMA DRIFT
+        # Handle Instagram's two different formats for following data
+        if isinstance(following_data, dict):
+            following_raw_list = following_data.get('relationships_following', [])
         elif isinstance(following_data, list):
-             st.info(f"Raw following records in file: {len(following_data)}")
+            following_raw_list = following_data
+        else:
+            following_raw_list = []
 
         # EXTRACT SETS SAFELY
-        # We add conditional 'if' statements to skip deactivated accounts missing the 'value' key
         followers = {
             user['string_list_data'][0]['value'] 
             for user in followers_data 
             if 'string_list_data' in user and len(user['string_list_data']) > 0 and 'value' in user['string_list_data'][0]
         }
         
-        # We also use .get() here to prevent a crash if the user uploads the wrong file by mistake
         following = {
             user['string_list_data'][0]['value'] 
-            for user in following_data.get('relationships_following', [])
+            for user in following_raw_list
             if 'string_list_data' in user and len(user['string_list_data']) > 0 and 'value' in user['string_list_data'][0]
         }
 
@@ -82,7 +82,6 @@ if followers_file is not None and following_file is not None:
             st.dataframe(
                 df,
                 column_config={
-                    # BUG FIX: Changed 'LinkColumns' to 'LinkColumn'
                     "Profile Link": st.column_config.LinkColumn("View Profile") 
                 },
                 use_container_width=True,
@@ -103,3 +102,4 @@ if followers_file is not None and following_file is not None:
 
     except Exception as e:
         st.error(f"Error processing files. Make sure you uploaded the correct JSON files. Error detail: {e}")
+    
